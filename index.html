@@ -129,7 +129,7 @@
             });
         
             // Improved login function
-            function login() {
+            async function login() {
                 const usernameInput = document.getElementById('login-username');
                 const passwordInput = document.getElementById('login-password');
                 const loginButton = document.getElementById('login-button');
@@ -167,11 +167,36 @@
                 loginButton.classList.add('loading');
         
                 try {
-                    let users = JSON.parse(localStorage.getItem('users')) || {};
+                    // Read from users.json
+                    let usersData = [];
+                    try {
+                        const response = await fetch('data/users.json');
+                        const data = await response.json();
+                        usersData = data.users;
+                    } catch (error) {
+                        console.error('Error reading users.json:', error);
+                        // Fallback to localStorage
+                        let users = JSON.parse(localStorage.getItem('users')) || {};
+                        if (users[username] && users[username] === password) {
+                            localStorage.setItem('currentUser', username);
+                            window.location.href = 'chatpage.html';
+                            return;
+                        }
+                    }
         
-                     if (users[username] && users[username] === password) {
-                         localStorage.setItem('currentUser', username);
-                         window.location.href = 'chatpage.html';
+                    // Find user in users.json
+                    const user = usersData.find(u => u.username === username && u.password === password);
+                    
+                    if (user) {
+                        // Update last login
+                        user.lastLogin = new Date().toISOString();
+                        
+                        // Save to localStorage for session
+                        localStorage.setItem('currentUser', username);
+                        localStorage.setItem('userData', JSON.stringify(user));
+                        
+                        // Redirect to chat
+                        window.location.href = 'chatpage.html';
                     } else {
                         alert('Invalid username or password');
                         passwordInput.value = '';
@@ -185,6 +210,11 @@
                     loginButton.classList.remove('loading');
                 }
             }
+        
+            // Make login button async
+            document.getElementById('login-button').onclick = async () => {
+                await login();
+            };
         </script>
     </body>
 </html>
