@@ -167,44 +167,32 @@
                 loginButton.classList.add('loading');
         
                 try {
-                    // Read from users.json
-                    let usersData = [];
-                    try {
-                        const response = await fetch('data/users.json');
-                        const data = await response.json();
-                        usersData = data.users;
-                    } catch (error) {
-                        console.error('Error reading users.json:', error);
-                        // Fallback to localStorage
-                        let users = JSON.parse(localStorage.getItem('users')) || {};
-                        if (users[username] && users[username] === password) {
-                            localStorage.setItem('currentUser', username);
-                            window.location.href = 'chatpage.html';
-                            return;
-                        }
+                    const response = await fetch('api/login.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+        
+                    const data = await response.json();
+        
+                    if (data.error) {
+                        throw new Error(data.error);
                     }
         
-                    // Find user in users.json
-                    const user = usersData.find(u => u.username === username && u.password === password);
-                    
-                    if (user) {
-                        // Update last login
-                        user.lastLogin = new Date().toISOString();
-                        
-                        // Save to localStorage for session
-                        localStorage.setItem('currentUser', username);
-                        localStorage.setItem('userData', JSON.stringify(user));
-                        
-                        // Redirect to chat
+                    if (data.success) {
+                        localStorage.setItem('currentUser', data.user.username);
+                        localStorage.setItem('userData', JSON.stringify(data.user));
                         window.location.href = 'chatpage.html';
-                    } else {
-                        alert('Invalid username or password');
-                        passwordInput.value = '';
-                        passwordInput.focus();
                     }
                 } catch (error) {
-                    alert('An error occurred. Please try again.');
-                     console.error('Login error:', error);
+                    alert(error.message || 'Login failed. Please try again.');
+                    passwordInput.value = '';
+                    passwordInput.focus();
                 } finally {
                     loginButton.textContent = 'Login';
                     loginButton.classList.remove('loading');
