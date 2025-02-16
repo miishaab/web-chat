@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+        .chat-container {
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .chat-header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .profile-menu {
+            position: relative;
+            display: inline-block;
+        }
+        .profile-menu-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .profile-menu-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .profile-menu-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .profile-menu:hover .profile-menu-content {
+            display: block;
+        }
+        .search-container {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: scroll;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .chat-message.sent {
+            justify-content: flex-end;
+        }
+        .chat-message.received {
+            justify-content: flex-start;
+        }
+        .chat-message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 10px;
+        }
+        .chat-message.sent .avatar {
+            margin-left: 10px;
+            margin-right: 0;
+        }
+        .chat-message .message-content {
+            background: #efefef;
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-message.sent .message-content {
+            background: #dcf8c6;
+        }
+        .chat-message .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            align-self: flex-end;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background-color: #0056b3;
+        }
+        .voice-message {
+            display: flex;
+            align-items: center;
+        }
+        .voice-message .bars {
+            display: flex;
+            margin-left: 10px;
+        }
+        .voice-message .bar {
+            width: 4px;
+            height: 20px;
+            background-color: #007bff;
+            margin: 0 2px;
+            animation: bounce 1s infinite;
+        }
+        .voice-message .bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        .voice-message .bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        .voice-message .bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+        .voice-message .bar:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: scaleY(1);
+            }
+            50% {
+                transform: scaleY(1.5);
+            }
+        }
+        @media (max-width: 600px) {
+            .chat-input input, .chat-input button {
+                padding: 8px;
+            }
+        }
+        .user-folder {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .user-folder:hover {
+            background-color: #f1f1f1;
+        }
+        .user-folder .username {
+            font-weight: bold;
+            flex: 1;
+        }
+        .user-folder .last-message {
+            color: #555;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .user-folder input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .delete-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #ff4d4d;
+            color: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .delete-button:hover {
+            background-color: #cc0000;
+        }
+        .back-button {
+            display: none;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <span>Instagram Chat Clone</span>
+            <div>
+                <button class="delete-button" onclick="toggleSelectMode()">Select</button>
+                <button class="back-button" id="back-button" onclick="goBack()">Back</button>
+                <div class="profile-menu">
+                    <button class="logout-button">Profile</button>
+                    <div class="profile-menu-content">
+                        <a href="#" onclick="viewProfile()">View Profile</a>
+                        <a href="#" onclick="editProfile()">Edit Profile</a>
+                        <a href="#" onclick="changePassword()">Change Password</a>
+                        <a href="#" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" id="search-username" placeholder="Search for a username..." oninput="searchUser()">
+        </div>
+        <div class="chat-box" id="chat-box">
+            <!-- User folders will appear here -->
+        </div>
+        <button class="delete-button" id="delete-selected-button" onclick="deleteSelectedChats()" style="display: none;">Delete Selected Chats</button>
+        <div class="chat-input" id="chat-input-container" style="display: none;">
+            <input type="text" id="chat-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+            <button id="voice-message-btn">🎤</button>
+            <input type="file" id="file-input" style="display: none;" onchange="sendFileMessage()">
+            <button onclick="document.getElementById('file-input').click()">📎</button>
+        </div>
+        <div class="footer">
+            Developer Contact: <a href="https://www.instagram.com/miis.haab__/" target="_blank">@miis.haab__</a>
+        </div>
+    </div>
+
+    <script>
+        let currentChatUser = null;
+        let mediaRecorder;
+        let audioChunks = [];
+        let selectMode = false;
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            loadUserFolders();
+        });
+
+        function toggleSelectMode() {
+            selectMode = !selectMode;
+            document.getElementById('delete-selected-button').style.display = selectMode ? 'block' : 'none';
+            const checkboxes = document.querySelectorAll('.select-user');
+            checkboxes.forEach(checkbox => {
+                checkbox.style.display = selectMode ? 'block' : 'none';
+            });
+        }
+
+        function searchUser() {
+            const searchUsername = document.getElementById('search-username').value.trim();
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+
+            if (users[searchUsername]) {
+                currentChatUser = searchUsername;
+                loadMessages();
+            } else {
+                currentChatUser = null;
+                document.getElementById('chat-box').innerHTML = '<p>No user found</p>';
+            }
+        }
+
+        function sendMessage() {
+            const chatInput = document.getElementById('chat-input');
+            const message = chatInput.value.trim();
+            const currentUser = localStorage.getItem('currentUser');
+
+            if (message && currentChatUser) {
+                saveMessage({ type: 'text', content: message, sender: currentUser, receiver: currentChatUser, timestamp: new Date().toISOString() });
+                chatInput.value = '';
+                loadMessages();
+            }
+        }
+
+        // Update the sendFileMessage function to handle different file types
+        function sendFileMessage() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const currentUser = localStorage.getItem('currentUser');
+
+            if (file && currentChatUser) {
+                if (confirm('Are you sure you want to send this file?')) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const fileUrl = event.target.result;
+                        const fileExtension = file.name.split('.').pop().toLowerCase();
+                        let messageType = 'document';
+
+                        const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                        const videoTypes = ['mp4', 'mkv', 'webm', 'avi'];
+                        const audioTypes = ['mp3', 'wav', 'ogg'];
+
+                        if (imageTypes.includes(fileExtension)) {
+                            messageType = 'image';
+                        } else if (videoTypes.includes(fileExtension)) {
+                            messageType = 'video';
+                        } else if (audioTypes.includes(fileExtension)) {
+                            messageType = 'audio';
+                        }
+
+                        saveMessage({
+                            type: messageType,
+                            content: fileUrl,
+                            sender: currentUser,
+                            receiver: currentChatUser,
+                            timestamp: new Date().toISOString(),
+                            fileName: file.name
+                        });
+                        loadMessages();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        // Update the createMessageElement function to handle different file types
+        function createMessageElement(type, content, sender, fileName = '', timestamp = new Date().toISOString()) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', sender === localStorage.getItem('currentUser') ? 'sent' : 'received');
+
+            const avatar = document.createElement('div');
+            avatar.classList.add('avatar');
+            messageElement.appendChild(avatar);
+
+            const messageContent = document.createElement('div');
+            messageContent.classList.add('message-content');
+
+            const timeElement = document.createElement('div');
+            timeElement.classList.add('timestamp');
+            timeElement.innerText = new Date(timestamp).toLocaleTimeString();
+
+            switch(type) {
+                case 'audio':
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = content;
+                    messageContent.appendChild(audio);
+                    break;
+
+                case 'image':
+                    const img = document.createElement('img');
+                    img.src = content;
+                    img.style.maxWidth = '100%';
+                    img.addEventListener('load', () => chatBox.scrollTop = chatBox.scrollHeight);
+                    messageContent.appendChild(img);
+                    break;
+
+                case 'video':
+                    const video = document.createElement('video');
+                    video.controls = true;
+                    video.src = content;
+                    video.style.maxWidth = '100%';
+                    messageContent.appendChild(video);
+                    break;
+
+                case 'text':
+                    const textPreview = document.createElement('pre');
+                    textPreview.textContent = content;
+                    textPreview.style.maxWidth = '100%';
+                    textPreview.style.overflow = 'auto';
+                    messageContent.appendChild(textPreview);
+                    break;
+
+                default:
+                    const link = document.createElement('a');
+                    link.href = content;
+                    link.textContent = fileName || 'Download Document';
+                    link.download = fileName;
+                    messageContent.appendChild(link);
+            }
+
+            messageContent.appendChild(timeElement);
+            messageElement.appendChild(messageContent);
+            return messageElement;
+        }
+
+        function saveMessage(message) {
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            messages.push(message);
+            localStorage.setItem('messages', JSON.stringify(messages));
+        }
+
+        // Update the loadMessages function to show the back button
+        function loadMessages() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            const currentUser = localStorage.getItem('currentUser');
+
+            messages.forEach(msg => {
+                if ((msg.sender === currentUser && msg.receiver === currentChatUser) || (msg.sender === currentChatUser && msg.receiver === currentUser)) {
+                    const messageElement = createMessageElement(msg.type, msg.content, msg.sender, msg.fileName, msg.timestamp);
+                    chatBox.appendChild(messageElement);
+                }
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+            document.getElementById('chat-input-container').style.display = 'flex';
+            document.getElementById('back-button').style.display = 'block';
+        }
+
+        // Update the loadUserFolders function to hide the back button
+        function loadUserFolders() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            const currentUser = localStorage.getItem('currentUser');
+            const userMessages = {};
+
+            // Group messages by user
+            messages.forEach(msg => {
+                const otherUser = msg.sender === currentUser ? msg.receiver : msg.sender;
+                if (!userMessages[otherUser]) {
+                    userMessages[otherUser] = [];
+                }
+                userMessages[otherUser].push(msg);
+            });
+
+            // Sort users by latest message
+            const sortedUsers = Object.keys(userMessages).sort((a, b) => {
+                const lastMessageA = userMessages[a][userMessages[a].length - 1];
+                const lastMessageB = userMessages[b][userMessages[b].length - 1];
+                return new Date(lastMessageB.timestamp) - new Date(lastMessageA.timestamp);
+            });
+
+            sortedUsers.forEach(user => {
+                const userFolder = document.createElement('div');
+                userFolder.classList.add('user-folder');
+                
+                if (!selectMode) {
+                    userFolder.onclick = () => {
+                        currentChatUser = user;
+                        loadMessages();
+                    };
+                }
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.classList.add('select-user');
+                checkbox.value = user;
+                checkbox.style.display = selectMode ? 'block' : 'none';
+                userFolder.appendChild(checkbox);
+
+                const username = document.createElement('div');
+                username.classList.add('username');
+                username.innerText = user;
+                userFolder.appendChild(username);
+
+                const lastMessage = userMessages[user][userMessages[user].length - 1];
+                const lastMessagePreview = document.createElement('div');
+                lastMessagePreview.classList.add('last-message');
+
+                const getPreviewText = (msg) => {
+                    switch(msg.type) {
+                        case 'text': return msg.content.split('\n').slice(0, 2).join('\n');
+                        case 'image': return '📷 Photo';
+                        case 'video': return '🎥 Video';
+                        case 'audio': return '🎤 Voice message';
+                        default: return '📎 Document';
+                    }
+                };
+
+                lastMessagePreview.innerText = getPreviewText(lastMessage);
+                userFolder.appendChild(lastMessagePreview);
+                chatBox.appendChild(userFolder);
+            });
+
+            document.getElementById('chat-input-container').style.display = 'none';
+            document.getElementById('back-button').style.display = 'none';
+        }
+
+        function deleteSelectedChats() {
+            const selectedUsers = Array.from(document.querySelectorAll('.select-user:checked')).map(checkbox => checkbox.value);
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            messages = messages.filter(msg => !selectedUsers.includes(msg.sender) && !selectedUsers.includes(msg.receiver));
+            localStorage.setItem('messages', JSON.stringify(messages));
+            loadUserFolders();
+        }
+
+        const voiceMessageBtn = document.getElementById('voice-message-btn');
+
+        voiceMessageBtn.addEventListener('mousedown', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+                });
+        });
+
+        voiceMessageBtn.addEventListener('mouseup', () => {
+            mediaRecorder.stop();
+            mediaRecorder.addEventListener('stop', () => {
+                if (confirm('Are you sure you want to send this voice message?')) {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const currentUser = localStorage.getItem('currentUser');
+
+                    saveMessage({ type: 'audio', content: audioUrl, sender: currentUser, receiver: currentChatUser, timestamp: new Date().toISOString() });
+                    loadMessages();
+                    audioChunks = [];
+                } else {
+                    audioChunks = [];
+                }
+            });
+        });
+
+        function viewProfile() {
+            const currentUser = localStorage.getItem('currentUser');
+            alert(`Username: ${currentUser}`);
+        }
+
+        function editProfile() {
+            const currentUser = localStorage.getItem('currentUser');
+            const newUsername = prompt('Enter new username:', currentUser);
+            if (newUsername && newUsername !== currentUser) {
+                let users = JSON.parse(localStorage.getItem('users')) || {};
+                if (users[newUsername]) {
+                    alert('Username already exists');
+                } else {
+                    users[newUsername] = users[currentUser];
+                    delete users[currentUser];
+                    localStorage.setItem('users', JSON.stringify(users));
+                    localStorage.setItem('currentUser', newUsername);
+                    alert('Username updated successfully');
+                }
+            }
+        }
+
+        function changePassword() {
+            const currentUser = localStorage.getItem('currentUser');
+            const newPassword = prompt('Enter new password:');
+            if (newPassword) {
+                let users = JSON.parse(localStorage.getItem('users')) || {};
+                users[currentUser] = newPassword;
+                localStorage.setItem('users', JSON.stringify(users));
+                alert('Password updated successfully');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        // Add this function to handle the back button
+        function goBack() {
+            if (currentChatUser) {
+                currentChatUser = null;
+                document.getElementById('chat-box').innerHTML = '';
+                document.getElementById('chat-input-container').style.display = 'none';
+                document.getElementById('back-button').style.display = 'none';
+                document.getElementById('search-username').value = '';
+                loadUserFolders();
+            }
+        }
+    </script>
+</body>
+</html>

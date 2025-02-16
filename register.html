@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Chat - Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .container h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background-color: #25D366;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .form-group button:hover {
+            background-color: #1DA851;
+        }
+        .form-group a {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            color: #25D366;
+            text-decoration: none;
+        }
+        .form-group a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .input-error {
+            border-color: #ff4444;
+        }
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Register</h2>
+        <div class="form-group">
+            <label for="register-username">Username</label>
+            <input type="text" id="register-username" placeholder="Choose a username">
+            <div id="username-error" class="error-message">Please enter a valid username</div>
+        </div>
+        <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" placeholder="Choose a password">
+            <div id="password-error" class="error-message">Password must be at least 6 characters</div>
+        </div>
+        <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" placeholder="Confirm your password">
+            <div id="confirm-error" class="error-message">Passwords do not match</div>
+        </div>
+        <div class="form-group">
+            <button onclick="register()" id="register-button">Register</button>
+        </div>
+        <div class="form-group">
+            <a href="index.html">Already have an account? Login</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('register-username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('register-password').focus();
+            }
+        });
+
+        document.getElementById('register-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('confirm-password').focus();
+            }
+        });
+
+        document.getElementById('confirm-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                register();
+            }
+        });
+
+        function register() {
+            const usernameInput = document.getElementById('register-username');
+            const passwordInput = document.getElementById('register-password');
+            const confirmInput = document.getElementById('confirm-password');
+            const registerButton = document.getElementById('register-button');
+            const usernameError = document.getElementById('username-error');
+            const passwordError = document.getElementById('password-error');
+            const confirmError = document.getElementById('confirm-error');
+
+            // Reset errors
+            usernameError.style.display = 'none';
+            passwordError.style.display = 'none';
+            confirmError.style.display = 'none';
+            usernameInput.classList.remove('input-error');
+            passwordInput.classList.remove('input-error');
+            confirmInput.classList.remove('input-error');
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmInput.value;
+
+            // Validate inputs
+            let isValid = true;
+
+            if (!username || username.length < 3) {
+                usernameError.style.display = 'block';
+                usernameInput.classList.add('input-error');
+                isValid = false;
+            }
+
+            if (!password || password.length < 6) {
+                passwordError.style.display = 'block';
+                passwordInput.classList.add('input-error');
+                isValid = false;
+            }
+
+            if (password !== confirmPassword) {
+                confirmError.style.display = 'block';
+                confirmInput.classList.add('input-error');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Show loading state
+            registerButton.textContent = 'Registering...';
+            registerButton.classList.add('loading');
+
+            try {
+                let users = JSON.parse(localStorage.getItem('users')) || {};
+
+                if (users[username]) {
+                    alert('Username already exists');
+                    usernameInput.classList.add('input-error');
+                    usernameError.textContent = 'Username already exists';
+                    usernameError.style.display = 'block';
+                } else {
+                    users[username] = password;
+                    localStorage.setItem('users', JSON.stringify(users));
+                    alert('Registration successful! Please login.');
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+                console.error('Registration error:', error);
+            } finally {
+                registerButton.textContent = 'Register';
+                registerButton.classList.remove('loading');
+            }
+        }
+    </script>
+</body>
+</html>

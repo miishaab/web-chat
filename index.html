@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Chat - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .container h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background-color: #25D366;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .form-group button:hover {
+            background-color: #1DA851;
+        }
+        .form-group a {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            color: #25D366;
+            text-decoration: none;
+        }
+        .form-group a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            .form-group input, .form-group button {
+                padding: 8px;
+            }
+        }
+             .error-message {
+                color: #ff4444;
+                font-size: 14px;
+                margin-top: 5px;
+                display: none;
+            }
+                
+            .input-error {
+                border-color: #ff4444;
+            }
+                
+            .loading {
+                opacity: 0.7;
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="login-username">Username</label>
+                <input type="text" id="login-username" placeholder="Enter your username">
+                <div id="username-error" class="error-message">Please enter a valid username</div>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="Enter your password">
+                <div id="password-error" class="error-message">Please enter your password</div>
+            </div>
+            <div class="form-group">
+                <button onclick="login()" id="login-button">Login</button>
+            </div>
+            <div class="form-group">
+                <a href="register.html">Don't have an account? Register</a>
+            </div>
+        </div>
+        
+        <script>
+            // Add event listeners for Enter key
+            document.getElementById('login-username').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('login-password').focus();
+                }
+            });
+        
+            document.getElementById('login-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+        
+            // Improved login function
+            function login() {
+                const usernameInput = document.getElementById('login-username');
+                const passwordInput = document.getElementById('login-password');
+                const loginButton = document.getElementById('login-button');
+                const usernameError = document.getElementById('username-error');
+                const passwordError = document.getElementById('password-error');
+                    
+                // Reset errors
+                usernameError.style.display = 'none';
+                passwordError.style.display = 'none';
+                usernameInput.classList.remove('input-error');
+                passwordInput.classList.remove('input-error');
+        
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+                    
+                // Validate inputs
+                let isValid = true;
+                    
+                if (!username) {
+                    usernameError.style.display = 'block';
+                    usernameInput.classList.add('input-error');
+                    isValid = false;
+                }
+                    
+                if (!password) {
+                    passwordError.style.display = 'block';
+                    passwordInput.classList.add('input-error');
+                    isValid = false;
+                }
+                    
+                if (!isValid) return;
+        
+                // Show loading state
+                loginButton.textContent = 'Logging in...';
+                loginButton.classList.add('loading');
+        
+                try {
+                    let users = JSON.parse(localStorage.getItem('users')) || {};
+        
+                     if (users[username] && users[username] === password) {
+                         localStorage.setItem('currentUser', username);
+                         window.location.href = 'chatpage.html';
+                    } else {
+                        alert('Invalid username or password');
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                    }
+                } catch (error) {
+                    alert('An error occurred. Please try again.');
+                     console.error('Login error:', error);
+                } finally {
+                    loginButton.textContent = 'Login';
+                    loginButton.classList.remove('loading');
+                }
+            }
+        </script>
+    </body>
+</html>
