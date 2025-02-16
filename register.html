@@ -128,7 +128,7 @@
             }
         });
 
-        function register() {
+        async function register() {
             const usernameInput = document.getElementById('register-username');
             const passwordInput = document.getElementById('register-password');
             const confirmInput = document.getElementById('confirm-password');
@@ -178,6 +178,16 @@
 
             try {
                 let users = JSON.parse(localStorage.getItem('users')) || {};
+                let usersData = [];
+                
+                try {
+                    const response = await fetch('data/users.json');
+                    const data = await response.json();
+                    usersData = data.users;
+                } catch (error) {
+                    console.error('Error reading users.json:', error);
+                    usersData = [];
+                }
 
                 if (users[username]) {
                     alert('Username already exists');
@@ -185,8 +195,40 @@
                     usernameError.textContent = 'Username already exists';
                     usernameError.style.display = 'block';
                 } else {
+                    // Create user object
+                    const userData = {
+                        username: username,
+                        password: password,
+                        createdAt: new Date().toISOString(),
+                        lastLogin: null,
+                        profilePic: null,
+                        settings: {
+                            theme: 'light',
+                            notifications: true,
+                            language: 'en'
+                        }
+                    };
+
+                    // Save to localStorage
                     users[username] = password;
                     localStorage.setItem('users', JSON.stringify(users));
+
+                    // Add to users.json
+                    usersData.push(userData);
+
+                    // Save back to users.json
+                    try {
+                        await fetch('data/users.json', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ users: usersData }, null, 2)
+                        });
+                    } catch (error) {
+                        console.error('Error saving to users.json:', error);
+                    }
+
                     alert('Registration successful! Please login.');
                     window.location.href = 'index.html';
                 }
@@ -198,6 +240,10 @@
                 registerButton.classList.remove('loading');
             }
         }
+
+        document.getElementById('register-button').onclick = async () => {
+            await register();
+        };
     </script>
 </body>
 </html>
